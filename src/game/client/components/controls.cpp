@@ -26,6 +26,50 @@ CControls::CControls()
 	std::fill(std::begin(m_aMouseInputType), std::end(m_aMouseInputType), EMouseInputType::ABSOLUTE);
 }
 
+void CControls::ConKeyDirectionMove(IConsole::IResult *pResult, void *pUserData)
+{
+	CMoveContext *pContext = (CMoveContext *)pUserData;
+	CControls *pSelf = pContext->m_pControls;
+
+	const int Dummy = g_Config.m_ClDummy;
+	const int Pressed = pResult->GetInteger(0);
+
+	if(pContext->m_Direction == EMoveDirection::LEFT)
+	{
+		pSelf->m_aRawLeft[Dummy] = Pressed;
+		if(Pressed)
+			pSelf->m_aLastMoveIdx[Dummy] = EMoveDirection::LEFT;
+	}
+	else
+	{
+		pSelf->m_aRawRight[Dummy] = Pressed;
+		if(Pressed)
+			pSelf->m_aLastMoveIdx[Dummy] = EMoveDirection::RIGHT;
+	}
+
+	int *pGameLeft = &pSelf->m_aInputDirectionLeft[Dummy];
+	int *pGameRight = &pSelf->m_aInputDirectionRight[Dummy];
+
+	*pGameLeft = 0;
+	*pGameRight = 0;
+
+	if(pSelf->m_aRawLeft[Dummy] && pSelf->m_aRawRight[Dummy])
+	{
+		if(pSelf->m_aLastMoveIdx[Dummy] == EMoveDirection::LEFT)
+			*pGameLeft = 1;
+		else
+			*pGameRight = 1;
+	}
+	else if(pSelf->m_aRawLeft[Dummy])
+	{
+		*pGameLeft = 1;
+	}
+	else if(pSelf->m_aRawRight[Dummy])
+	{
+		*pGameRight = 1;
+	}
+}
+
 void CControls::OnReset()
 {
 	ResetInput(0);
@@ -113,12 +157,12 @@ void CControls::OnConsoleInit()
 {
 	// game commands
 	{
-		static CInputState s_State = {this, {&m_aInputDirectionLeft[0], &m_aInputDirectionLeft[1]}};
-		Console()->Register("+left", "", CFGFLAG_CLIENT, ConKeyInputState, &s_State, "Move left");
+		static CMoveContext s_LeftContext = {this, EMoveDirection::LEFT};
+		Console()->Register("+left", "", CFGFLAG_CLIENT, ConKeyDirectionMove, &s_LeftContext, "Move left");
 	}
 	{
-		static CInputState s_State = {this, {&m_aInputDirectionRight[0], &m_aInputDirectionRight[1]}};
-		Console()->Register("+right", "", CFGFLAG_CLIENT, ConKeyInputState, &s_State, "Move right");
+		static CMoveContext s_RightContext = {this, EMoveDirection::RIGHT};
+		Console()->Register("+right", "", CFGFLAG_CLIENT, ConKeyDirectionMove, &s_RightContext, "Move right");
 	}
 	{
 		static CInputState s_State = {this, {&m_aInputData[0].m_Jump, &m_aInputData[1].m_Jump}};

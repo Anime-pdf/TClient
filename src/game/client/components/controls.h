@@ -15,6 +15,23 @@
 class CControls : public CComponent
 {
 public:
+	enum class EMoveDirection
+	{
+		LEFT,
+		RIGHT
+	};
+
+	int m_aRawLeft[NUM_DUMMIES];
+	int m_aRawRight[NUM_DUMMIES];
+
+	EMoveDirection m_aLastMoveIdx[NUM_DUMMIES];
+
+	struct CMoveContext
+	{
+		CControls *m_pControls;
+		EMoveDirection m_Direction;
+	};
+
 	float GetMinMouseDistance() const;
 	float GetMaxMouseDistance() const;
 
@@ -62,5 +79,7 @@ private:
 	static void ConKeyInputCounter(IConsole::IResult *pResult, void *pUserData);
 	static void ConKeyInputSet(IConsole::IResult *pResult, void *pUserData);
 	static void ConKeyInputNextPrevWeapon(IConsole::IResult *pResult, void *pUserData);
+
+	static void ConKeyDirectionMove(IConsole::IResult *pResult, void *pUserData);
 };
 #endif
